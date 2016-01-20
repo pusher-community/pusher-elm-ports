@@ -4,8 +4,8 @@ var myApp = Elm.fullscreen(Elm.PusherApp, {
 
 var pusher = new Pusher('84cb48dd85934503cdaf');
 
-var channel = pusher.subscribe('my_channel');
+var channel = pusher.subscribe('messages');
 
 channel.bind('new_message', function(data) {
-  myApp.ports.newMessage.send(data.message);
+  myApp.ports.newMessage.send(data.text);
 });

@@ -1,0 +1,30 @@
+{
+  "name": "elm-pusher",
+  "version": "1.0.0",
+  "description": "Updating an Elm app with data from Pusher using ports.",
+  "main": "Gulpfile.js",
+  "dependencies": {
+    "gulp": "^3.9.0",
+    "gulp-elm": "^0.2.0",
+    "gulp-load-plugins": "^1.2.0",
+    "gulp-plumber": "^1.0.1",
+    "gulp-util": "^3.0.7",
+    "gulp-watch": "^4.3.5",
+    "live-server": "^0.9.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pusher-community/pusher-elm-ports.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/pusher-community/pusher-elm-ports/issues"
+  },
+  "homepage": "https://github.com/pusher-community/pusher-elm-ports#readme"
+}
