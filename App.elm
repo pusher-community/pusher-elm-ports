@@ -3,7 +3,6 @@ module PusherApp (..) where
 import Signal
 import Graphics.Element exposing (..)
 import Html exposing (..)
-import Effects exposing (Effects)
 import Task exposing (Task)
 import Http
 import Html.Attributes exposing (..)
