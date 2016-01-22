@@ -121,19 +121,19 @@ inputSignal =
     Signal.mergeMany [ actions.signal, newMessageSignal ]
 
 
-effectsAndModel : Signal ( Model, Task () () )
-effectsAndModel =
+modelAndTask : Signal ( Model, Task () () )
+modelAndTask =
     Signal.foldp update ( initialModel, Task.succeed () ) inputSignal
 
 
 modelSignal : Signal Model
 modelSignal =
-    Signal.map fst effectsAndModel
+    Signal.map fst modelAndTask
 
 
 tasksSignal : Signal (Task () ())
 tasksSignal =
-    Signal.map snd effectsAndModel
+    Signal.map snd modelAndTask
 
 
 silenceTask : Task x a -> Task () ()
