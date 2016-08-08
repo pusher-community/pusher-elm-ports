@@ -1,6 +1,4 @@
-var myApp = Elm.fullscreen(Elm.PusherApp, {
-  newMessage: ''
-});
+var myApp = Elm.PusherApp.fullscreen();
 
 var pusher = new Pusher('84cb48dd85934503cdaf');
 

@@ -1,153 +1,120 @@
-module PusherApp (..) where
+port module PusherApp exposing (..)
 
-import Signal
-import Graphics.Element exposing (..)
 import Html exposing (..)
+import Html.App as App
 import Task exposing (Task)
 import Http
 import Html.Attributes exposing (..)
-import Html.Events exposing (onClick, targetValue, on)
+import Html.Events exposing (onClick, onInput)
 import Json.Decode as JSDecode
 import Json.Encode as JSEncode
 
 
-port newMessage : Signal String
 type alias Model =
     { messages : List String
     , field : String
     }
 
 
-type Action
+type Msg
     = NoOp
     | NewMessage String
     | SendMessage
     | UpdateField String
 
 
-actions : Signal.Mailbox Action
-actions =
-    Signal.mailbox NoOp
+main =
+    App.program
+        { init = init
+        , view = view
+        , update = update
+        , subscriptions = subscriptions
+        }
 
 
 initialModel =
     { messages = [ "Hello World" ], field = "" }
 
 
+init : ( Model, Cmd Msg )
+init =
+    ( initialModel, Cmd.none )
+
+
+port newMessage : (String -> msg) -> Sub msg
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    newMessage NewMessage
+
+
 jsonBody : String -> String
 jsonBody str =
-    JSEncode.encode
-        0
-        (JSEncode.object
-            [ ( "text", JSEncode.string str ) ]
-        )
+    JSEncode.encode 0
+        (JSEncode.object [ ( "text", JSEncode.string str ) ])
 
 
-postJson : String -> Task () ()
-postJson str =
-    silenceTask
-        <| Http.send
-            Http.defaultSettings
+httpPostMessage : String -> Task Http.Error String
+httpPostMessage str =
+    Http.fromJson JSDecode.string
+        <| Http.send Http.defaultSettings
             { verb = "POST"
             , headers =
                 [ ( "Content-Type", "application/json" )
                 , ( "Accept", "application/json" )
                 ]
-            , url = "http://localhost:5000/messages"
+            , url = "http://localhost:4567/messages"
             , body = Http.string (jsonBody str)
             }
 
 
-update : Action -> ( Model, Task () () ) -> ( Model, Task () () )
-update action ( model, _ ) =
+postJson : String -> Cmd Msg
+postJson str =
+    Task.perform (always NoOp) (always NoOp) (httpPostMessage str)
+
+
+update : Msg -> Model -> ( Model, Cmd Msg )
+update action model =
     case action of
         NewMessage string ->
             ( { model | messages = string :: model.messages }
-            , Task.succeed ()
+            , Cmd.none
             )
 
         UpdateField string ->
-            ( { model | field = string }, Task.succeed () )
+            ( { model | field = string }, Cmd.none )
 
         NoOp ->
-            ( model, Task.succeed () )
+            ( model, Cmd.none )
 
         SendMessage ->
             ( { model | field = "" }, postJson model.field )
 
 
-makeListItem : String -> Html
+makeListItem : String -> Html Msg
 makeListItem message =
     li [] [ text message ]
 
 
-makeUserForm : Signal.Address Action -> Html
-makeUserForm address =
-    div
-        []
+makeUserForm : String -> Html Msg
+makeUserForm field =
+    div []
         [ input
             [ placeholder "Your chat message here"
-            , on "input" targetValue (Signal.message address << UpdateField)
+            , onInput UpdateField
+            , value field
             ]
             []
-        , button
-            [ onClick address SendMessage ]
+        , button [ onClick SendMessage ]
             [ text "Send" ]
         ]
 
 
-view : Signal.Address Action -> Model -> Html
-view address model =
-    div
-        []
-        [ makeUserForm address
-        , ul
-            []
+view : Model -> Html Msg
+view model =
+    div []
+        [ makeUserForm model.field
+        , ul []
             (List.map makeListItem model.messages)
         ]
-
-
-
--- SIGNALS
-
-
-newMessageSignal : Signal Action
-newMessageSignal =
-    Signal.map (\str -> (NewMessage str)) newMessage
-
-
-inputSignal : Signal Action
-inputSignal =
-    Signal.mergeMany [ actions.signal, newMessageSignal ]
-
-
-modelAndTask : Signal ( Model, Task () () )
-modelAndTask =
-    Signal.foldp update ( initialModel, Task.succeed () ) inputSignal
-
-
-modelSignal : Signal Model
-modelSignal =
-    Signal.map fst modelAndTask
-
-
-tasksSignal : Signal (Task () ())
-tasksSignal =
-    Signal.map snd modelAndTask
-
-
-silenceTask : Task x a -> Task () ()
-silenceTask task =
-    task
-        |> Task.map (\_ -> ())
-        |> Task.mapError (\_ -> ())
-
-
-port tasks : Signal (Task () ())
-port tasks =
-    tasksSignal
-
-
-main : Signal Html
-main =
-    Signal.map (view actions.address) modelSignal
